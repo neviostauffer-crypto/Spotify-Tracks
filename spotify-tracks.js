@@ -1,31 +1,57 @@
+// Warten, bis das komplette HTML-Dokument geladen ist
 document.addEventListener("DOMContentLoaded", () => {
+
+  // Spotify API Token (gültig für 1 Stunde)
+  // Wird benötigt, um autorisierte Anfragen an die Spotify API zu senden
   const token = "BQD-7QiFsQweg599Nq6DmmacTCqGgfxxijmZ3jkVVqqsARU9R3Vb3uHkdrfMPSmPg_wGwnFOZPDjMBDmPeUdTHh2-TSnSPbVDfsg2Oiey-b6U6pbWVbsfKGoGuPQ7meTqBT9RnIQIF8";
+
+  // HTTP-Header mit Authorization für alle Fetch-Anfragen
   const headers = { Authorization: `Bearer ${token}` };
 
+  /* ---------- DOM-ELEMENTE ---------- */
+
+  // Auswahl Song / Künstler / Album
   const searchType = document.getElementById("searchType");
+
+  // Texteingabe für Suchbegriff
   const searchInput = document.getElementById("searchInput");
+
+  // Container für Suchergebnisse (Cards)
   const results = document.getElementById("results");
+
+  // Liste für Autocomplete-Vorschläge
   const autocompleteList = document.getElementById("autocompleteList");
 
+  // Formular (Wizard)
   const wizardForm = document.getElementById("wizardForm");
+
+  // Buttons für Formularnavigation
   const toStep2 = document.getElementById("toStep2");
   const backTo1 = document.getElementById("backTo1");
+
+  // Alle Formular-Schritte
   const steps = document.querySelectorAll(".step");
 
+  /* ---------- FORMULAR-NAVIGATION (Wizard) ---------- */
+
+  // Zeigt nur den gewünschten Schritt an
   function showStep(step) {
     steps.forEach(s => s.classList.add("d-none"));
     document.querySelector(`[data-step="${step}"]`).classList.remove("d-none");
   }
 
+  // Aktiviert den "Weiter"-Button erst, wenn ein Suchtyp gewählt wurde
   searchType.addEventListener("change", () => {
     toStep2.disabled = !searchType.value;
   });
 
+  // Wechsel zu Schritt 2
   toStep2.addEventListener("click", () => {
     showStep(2);
     searchInput.focus();
   });
 
+  // Zurück zu Schritt 1 und Zurücksetzen der Ergebnisse
   backTo1.addEventListener("click", () => {
     showStep(1);
     searchInput.value = "";
@@ -33,51 +59,97 @@ document.addEventListener("DOMContentLoaded", () => {
     autocompleteList.innerHTML = "";
   });
 
+  // Formular absenden (Suche starten)
   wizardForm.addEventListener("submit", e => {
-    e.preventDefault();
+    e.preventDefault(); // verhindert Seitenreload
     autocompleteList.innerHTML = "";
     searchSpotify();
   });
 
+  /* ---------- SPOTIFY SUCHE ---------- */
+
+  // Führt die eigentliche Suche bei Spotify aus
   async function searchSpotify() {
     const query = searchInput.value.trim();
     if (!query) return;
 
     const type = searchType.value;
+
+    // Spotify Search Endpoint
     const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=${type}&limit=8`;
+
     const res = await fetch(url, { headers });
     const data = await res.json();
+
     results.innerHTML = "";
 
+    // Je nach Suchtyp unterschiedliche Daten rendern
     if (type === "track") renderTracks(data.tracks.items);
     if (type === "artist") renderArtists(data.artists.items);
     if (type === "album") renderAlbums(data.albums.items);
   }
 
-  /* ---------- RENDER ---------- */
+  /* ---------- RENDERING DER ERGEBNISSE ---------- */
+
+  // Songs rendern
   function renderTracks(tracks) {
-    renderCards(tracks.map(t => cardTemplate(t.id, t.name, t.album.images[0]?.url, "track", t.external_urls.spotify)));
+    renderCards(
+      tracks.map(t =>
+        cardTemplate(
+          t.id,
+          t.name,
+          t.album.images[0]?.url,
+          "track",
+          t.external_urls.spotify
+        )
+      )
+    );
   }
 
+  // Künstler rendern
   function renderArtists(artists) {
-    renderCards(artists.map(a => cardTemplate(a.id, a.name, a.images[0]?.url, "artist", a.external_urls.spotify)));
+    renderCards(
+      artists.map(a =>
+        cardTemplate(
+          a.id,
+          a.name,
+          a.images[0]?.url,
+          "artist",
+          a.external_urls.spotify
+        )
+      )
+    );
   }
 
+  // Alben rendern
   function renderAlbums(albums) {
-    renderCards(albums.map(a => cardTemplate(a.id, a.name, a.images[0]?.url, "album", a.external_urls.spotify)));
+    renderCards(
+      albums.map(a =>
+        cardTemplate(
+          a.id,
+          a.name,
+          a.images[0]?.url,
+          "album",
+          a.external_urls.spotify
+        )
+      )
+    );
   }
 
+  // Fügt mehrere Cards performant ins DOM ein
   function renderCards(cards) {
-    // Fragment zur Minimierung von Forced Reflows
     const fragment = document.createDocumentFragment();
+
     cards.forEach(html => {
       const div = document.createElement("div");
       div.innerHTML = html;
       fragment.appendChild(div.firstElementChild);
     });
+
     results.appendChild(fragment);
   }
 
+  // HTML-Template für eine einzelne Card
   function cardTemplate(id, title, img, type, spotifyUrl) {
     return `
       <div class="col-md-3">
@@ -98,7 +170,9 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>`;
   }
 
-  /* ---------- MODAL ---------- */
+  /* ---------- MODAL & DETAILANSICHT ---------- */
+
+  // Klick auf eine Card → Modal öffnen
   results.addEventListener("click", async e => {
     const card = e.target.closest(".clickable");
     if (!card) return;
@@ -112,49 +186,68 @@ document.addEventListener("DOMContentLoaded", () => {
     if (type === "album") openAlbum(id, spotifyUrl);
   });
 
+  // Track-Details laden
   async function openTrack(id, spotifyUrl) {
     const res = await fetch(`https://api.spotify.com/v1/tracks/${id}`, { headers });
     const t = await res.json();
-    openModal(t.name, `
-      ${accordion("Künstler", t.artists.map(a => a.name).join(", "), "a1")}
-      ${accordion("Album", t.album.name, "a2")}
-      ${accordion("Länge", formatDuration(t.duration_ms), "a3")}
-    `, spotifyUrl);
+
+    openModal(
+      t.name,
+      `
+        ${accordion("Künstler", t.artists.map(a => a.name).join(", "), "a1")}
+        ${accordion("Album", t.album.name, "a2")}
+        ${accordion("Länge", formatDuration(t.duration_ms), "a3")}
+      `,
+      spotifyUrl
+    );
   }
 
+  // Künstler-Details laden
   async function openArtist(id, spotifyUrl) {
     const res = await fetch(`https://api.spotify.com/v1/artists/${id}`, { headers });
     const a = await res.json();
-    const genres = a.genres.length ? a.genres.join(", ") : "kein spezifisches Genre";
 
-    openModal(a.name, `
-      ${accordion("Genres", genres, "a1")}
-      ${accordion("Follower", a.followers.total.toLocaleString(), "a2")}
-      ${accordion("Popularität", a.popularity + " / 100", "a3")}
-    `, spotifyUrl);
+    openModal(
+      a.name,
+      `
+        ${accordion("Genres", a.genres.join(", ") || "keine Angaben", "a1")}
+        ${accordion("Follower", a.followers.total.toLocaleString(), "a2")}
+        ${accordion("Popularität", a.popularity + " / 100", "a3")}
+      `,
+      spotifyUrl
+    );
   }
 
+  // Album-Details laden
   async function openAlbum(id, spotifyUrl) {
     const res = await fetch(`https://api.spotify.com/v1/albums/${id}`, { headers });
     const a = await res.json();
-    const total = a.tracks.items.reduce((s, t) => s + t.duration_ms, 0);
 
-    openModal(a.name, `
-      ${accordion("Künstler", a.artists.map(ar => ar.name).join(", "), "a1")}
-      ${accordion("Anzahl Songs", a.total_tracks, "a2")}
-      ${accordion("Gesamtlaufzeit", formatDuration(total), "a3")}
-    `, spotifyUrl);
+    const total = a.tracks.items.reduce((sum, t) => sum + t.duration_ms, 0);
+
+    openModal(
+      a.name,
+      `
+        ${accordion("Künstler", a.artists.map(ar => ar.name).join(", "), "a1")}
+        ${accordion("Anzahl Songs", a.total_tracks, "a2")}
+        ${accordion("Gesamtlaufzeit", formatDuration(total), "a3")}
+      `,
+      spotifyUrl
+    );
   }
 
+  // Öffnet das Bootstrap Modal
   function openModal(title, content, spotifyUrl) {
     document.getElementById("modalTitle").textContent = title;
     document.getElementById("modalAccordion").innerHTML = content;
+
     const link = document.getElementById("spotifyLink");
     link.href = spotifyUrl;
-    link.setAttribute("aria-label", `${title} auf Spotify öffnen`);
+
     new bootstrap.Modal(document.getElementById("infoModal")).show();
   }
 
+  // Accordion-HTML-Template
   function accordion(title, content, id) {
     return `
       <div class="accordion-item bg-dark text-white">
@@ -171,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>`;
   }
 
+  // Formatiert Millisekunden in Minuten:Sekunden
   function formatDuration(ms) {
     const min = Math.floor(ms / 60000);
     const sec = String(Math.floor((ms % 60000) / 1000)).padStart(2, "0");
@@ -178,18 +272,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ---------- AUTOCOMPLETE ---------- */
+
   let debounceTimeout;
+
+  // Autocomplete während der Eingabe
   searchInput.addEventListener("input", () => {
     clearTimeout(debounceTimeout);
+
     const query = searchInput.value.trim();
     if (!query) {
       autocompleteList.innerHTML = "";
       return;
     }
 
+    // Verzögert API-Aufruf (Performance)
     debounceTimeout = setTimeout(async () => {
       const type = searchType.value;
       const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=${type}&limit=5`;
+
       const res = await fetch(url, { headers });
       const data = await res.json();
 
@@ -198,40 +298,23 @@ document.addEventListener("DOMContentLoaded", () => {
       if (type === "artist") items = data.artists?.items || [];
       if (type === "album") items = data.albums?.items || [];
 
-      // Minimiert Forced Reflows
       const fragment = document.createDocumentFragment();
       autocompleteList.innerHTML = "";
+
       items.forEach(item => {
         const li = document.createElement("li");
         li.textContent = item.name;
         li.className = "list-group-item list-group-item-action";
+
         li.addEventListener("click", () => {
           searchInput.value = item.name;
           autocompleteList.innerHTML = "";
         });
+
         fragment.appendChild(li);
       });
+
       autocompleteList.appendChild(fragment);
-    }, 250); // Debounce, um API-Calls zu reduzieren
+    }, 250);
   });
 });
-
-fetch(url, {
-  headers: {
-    Authorization: `Bearer ${token}`
-  }
-})
-.then(res => {
-  if (!res.ok) {
-    throw new Error(`HTTP Fehler: ${res.status}`);
-  }
-  return res.json();
-})
-.then(data => {
-  console.log(data);
-  // erst jetzt auf data.albums.items zugreifen
-})
-.catch(err => {
-  console.error("Spotify Fehler:", err.message);
-});
-
