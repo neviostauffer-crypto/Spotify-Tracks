@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const token = "BQDzAxxTFG_Qsxqk1spguw-yPM_PJkRzfxD21mb8qWFfkxjdCXdyXQPRUEDV5qg4Fe6dCIo-dBaEY_bsME3tu0yQqGZA2WmBz4hUnRemqSd68fBCYPB7oEL5z-tyiXOcPD5kPKVt0SM";
+  const token = "BQAcbB8fLn8jcn2DiWYllvlJPrtkDU2EzZlHDrWlLFXQTJQe-qbSrWoW2s2zAMt2iW_6_YE_9tn_FQlUXPBDIdrpjm_G9y4dKumsFImqTxlxzlWjdhzaupih07VPNxu6XjJ9A0JL4dg";
   const headers = { Authorization: `Bearer ${token}` };
 
   const searchType = document.getElementById("searchType");
