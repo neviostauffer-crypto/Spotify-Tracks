@@ -2,50 +2,40 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-
-  <!-- Titel der Seite (SEO & Browser-Tab) -->
   <title>Spotify Suche – Künstler, Songs & Alben</title>
 
-  <!-- SEO Beschreibung -->
+  <!-- SEO -->
   <meta name="description" content="Spotify Suche nach Künstlern, Songs und Alben mit Detailinformationen.">
-
-  <!-- Responsive Design -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Critical CSS: Grunddesign sofort laden -->
+  <!-- Critical CSS -->
   <style>
     body {
       background-color: #121212;
       color: #ffffff;
       font-family: 'Segoe UI', sans-serif;
     }
-
-    /* Card-Design für Suchergebnisse */
     .card {
       background-color: #1e1e1e;
       border-radius: 10px;
       cursor: pointer;
     }
-
-    /* Abgerundete Bilder */
     .card img {
       border-top-left-radius: 10px;
       border-top-right-radius: 10px;
     }
 
-    /* Weißer Accordion-Pfeil */
+    /* Weißer Pfeil für Accordion */
     .accordion-button::after {
-      filter: invert(1);
+      filter: invert(1); /* macht den Pfeil weiß */
     }
   </style>
 
-  <!-- Bootstrap CSS asynchron laden (Performance) -->
+  <!-- Bootstrap deferred -->
   <link rel="preload"
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
         as="style"
         onload="this.onload=null;this.rel='stylesheet'">
-
-  <!-- Fallback für No-JS -->
   <noscript>
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
@@ -54,49 +44,52 @@
 
 <body>
 
-<!-- Hauptinhalt (Accessibility Landmark) -->
 <main id="main-content">
 
-  <!-- Mehrschritt-Formular -->
   <form id="wizardForm" class="container py-5">
 
-    <!-- Hauptüberschrift -->
     <h1 class="text-center mb-4">🎵 Spotify Suche</h1>
 
-    <!-- Schritt 1: Suchtyp -->
-    <section class="step" data-step="1">
-      <h2 class="h4 mb-3">Was möchtest du suchen?</h2>
+    <!-- STEP 1 -->
+    <section class="step" data-step="1" aria-labelledby="step1-title">
+      <h2 id="step1-title" class="h4 mb-3">Was möchtest du suchen?</h2>
 
-      <label for="searchType">Suchtyp auswählen</label>
-      <select id="searchType" class="form-select mb-3" required>
+      <label for="searchType" class="form-label">Suchtyp auswählen</label>
+      <select id="searchType"
+              class="form-select mb-3"
+              required
+              aria-describedby="searchTypeHelp">
         <option value="">Bitte wählen</option>
         <option value="track">Song</option>
         <option value="artist">Künstler</option>
         <option value="album">Album</option>
       </select>
+      <div id="searchTypeHelp" class="visually-hidden">
+        Wählen Sie aus, ob Sie nach Songs, Künstlern oder Alben suchen möchten
+      </div>
 
       <button type="button" id="toStep2" class="btn btn-success" disabled>
         Weiter
       </button>
     </section>
 
-    <!-- Schritt 2: Suchbegriff -->
-    <section class="step d-none" data-step="2">
-      <h2 class="h4 mb-3">Suchbegriff eingeben</h2>
+    <!-- STEP 2 -->
+    <section class="step d-none" data-step="2" aria-labelledby="step2-title">
+      <h2 id="step2-title" class="h4 mb-3">Suchbegriff eingeben</h2>
 
+      <label for="searchInput" class="form-label">Suchbegriff</label>
       <input type="text"
              id="searchInput"
              class="form-control mb-3"
              placeholder="z.B. Coldplay, Shape of You"
+             required
              autocomplete="off">
 
-      <!-- Autocomplete -->
-      <ul id="autocompleteList" class="list-group position-absolute w-100"></ul>
+      <ul id="autocompleteList" class="list-group position-absolute w-100" style="z-index:1000;"></ul>
 
-      <button type="button" id="backTo1" class="btn btn-secondary">
+      <button type="button" id="backTo1" class="btn btn-secondary me-2">
         Zurück
       </button>
-
       <button type="submit" class="btn btn-success">
         Suchen
       </button>
@@ -104,28 +97,26 @@
 
   </form>
 
-  <!-- Suchergebnisse -->
+  <!-- RESULTS -->
   <div class="container">
     <div id="results" class="row g-4"></div>
   </div>
 
 </main>
 
-<!-- Modal für Detailinfos -->
-<div class="modal fade" id="infoModal">
+<!-- MODAL -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content bg-dark text-white">
       <div class="modal-header">
-        <h3 id="modalTitle"></h3>
-        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <h3 class="modal-title h5" id="modalTitle"></h3>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
-
       <div class="modal-body">
         <div class="accordion" id="modalAccordion"></div>
       </div>
-
       <div class="modal-footer">
-        <a id="spotifyLink" class="btn btn-success" target="_blank">
+        <a id="spotifyLink" class="btn btn-success" target="_blank" rel="noopener">
           Auf Spotify öffnen
         </a>
       </div>
@@ -133,11 +124,7 @@
   </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
-
-<!-- Eigene Logik -->
 <script src="spotify-tracks.js" defer></script>
-
 </body>
 </html>
