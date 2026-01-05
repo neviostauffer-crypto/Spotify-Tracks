@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const token = "BQDzAxxTFG_Qsxqk1spguw-yPM_PJkRzfxD21mb8qWFfkxjdCXdyXQPRUEDV5qg4Fe6dCIo-dBaEY_bsME3tu0yQqGZA2WmBz4hUnRemqSd68fBCYPB7oEL5z-tyiXOcPD5kPKVt0SM";
+  const token = "BQAEWvtJdMb90Z0jQWGfeSrbJSju7ulzOw6Mhurd4Q04zB-MazvIgVWLaNWI9-iXezPv5TmZy25yvt_3DZfndGSaIdg_Q7eBRUvpuDTkVn-OKhSUoUGoxs6zmCi67P8DHX9KSuJn8Wk";
   const headers = { Authorization: `Bearer ${token}` };
 
   const searchType = document.getElementById("searchType");
@@ -215,3 +215,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 250); // Debounce, um API-Calls zu reduzieren
   });
 });
+
+fetch(url, {
+  headers: {
+    Authorization: `Bearer ${token}`
+  }
+})
+.then(res => {
+  if (!res.ok) {
+    throw new Error(`HTTP Fehler: ${res.status}`);
+  }
+  return res.json();
+})
+.then(data => {
+  console.log(data);
+  // erst jetzt auf data.albums.items zugreifen
+})
+.catch(err => {
+  console.error("Spotify Fehler:", err.message);
+});
+
