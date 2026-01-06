@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Spotify API Token (gültig für 1 Stunde)
   // Wird benötigt, um autorisierte Anfragen an die Spotify API zu senden
-  const token = "BQD-7QiFsQweg599Nq6DmmacTCqGgfxxijmZ3jkVVqqsARU9R3Vb3uHkdrfMPSmPg_wGwnFOZPDjMBDmPeUdTHh2-TSnSPbVDfsg2Oiey-b6U6pbWVbsfKGoGuPQ7meTqBT9RnIQIF8";
+  const token = "BQDHZ0KPeLxYF7-EkD8hzgpjlM43op5kqXmVZ71A2hjaoMq5P7osuYzF3hPhOaPwXEZKJsH5GUk1-OcEZ7A80hqRcI3ANz1xc466dvJ3wi3KvBMhSjK0tK9QedhI6r-it41iL1NTaaE";
 
   // HTTP-Header mit Authorization für alle Fetch-Anfragen
   const headers = { Authorization: `Bearer ${token}` };
